@@ -5,4 +5,4 @@ router.get('/', (req, res)=>{
     res.send("Server running");
 })
 
-module.exports = router;
+module.exports = router
