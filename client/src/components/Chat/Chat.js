@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import io from "socket.io-client";
+import './chat.css'
 
-var socket;  
+let socket;  
 
 
 const Chat = () => {
 
     const[name, setName] = useState('');
     const [room, setRoom] = useState('');
-    
+    const [messages, setMessages] = useState('');
+    const [message, setMessage] = useState([]);
 
 
     const [searchParams] = useSearchParams();
@@ -18,21 +20,56 @@ const Chat = () => {
         const currentParams = Object.fromEntries([...searchParams]);
         let params = new URLSearchParams(currentParams);
         
-        socket = io('http://localhost:3000', {transports: ['websocket', 'polling', 'flashsocket']});
+        socket = io('http://localhost:5000', {transports: ['websocket', 'polling', 'flashsocket']});
         //console.log(params.get('name '), params.get('room ')); //koko room
+        
+        const name = params.get('name ');
+        const room = params.get('room ')
 
-        setName(params.get('name '));
-        setRoom(params.get('room '))
+        setName(name);
+        setRoom(room);
 
-        console.log(socket);
+        
+        socket.emit('join', {name, room}, ()=>{
+
+        });
+
+        return()=>{
+            socket.emit('disconnect');
+            socket.off();
+        }
+
+        //console.log(socket);
+
          // get new values onchange
       }, [searchParams]); 
+
+      useEffect(()=>{
+          socket.on('message', message=>{
+               setMessages(messages=>[...messages, message]);
+          })
+      }, [messages])
     
-    
+    //function to send message on pressing Enter
+
+    const sendMessage = (event)=>{
+        event.preventDefault();
+
+        if(message){
+            socket.emit('sendMessage', message, ()=> setMessage(''));
+        }
+    }
+
+    console.log(message, messages);
+
 
     return (
-        <div>
-            chat
+        <div className="outerContainer">
+            <div className="container" >
+                <input value={message} onChange={(event)=> setMessage(event.target.value)} 
+                onKeyPress={(event)=> event.key==='Enter'? sendMessage(event):null}
+                />
+            </div>
         </div>
     )
 }
