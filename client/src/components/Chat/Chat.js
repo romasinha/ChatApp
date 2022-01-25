@@ -9,6 +9,8 @@ import Messages from '../Messages/Messages'
 
 import './chat.css'
 
+const ENDPOINT = "http://localhost:5000";
+
 let socket;  
 
 
@@ -18,6 +20,7 @@ const Chat = () => {
     const [room, setRoom] = useState('');
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState('');
+    const [users, setUsers] = useState('');
 
 
     const [searchParams] = useSearchParams();
@@ -25,7 +28,7 @@ const Chat = () => {
         const currentParams = Object.fromEntries([...searchParams]);
         let params = new URLSearchParams(currentParams);
         
-        socket = io('http://localhost:5000', {transports: ['websocket', 'polling', 'flashsocket']});
+        socket = io(ENDPOINT);
         //console.log(params.get('name '), params.get('room ')); //koko room
         
         const name = params.get('name ');
@@ -35,25 +38,29 @@ const Chat = () => {
         setRoom(room);
 
         
-        socket.emit('join', {name, room}, ()=>{
-
+        socket.emit('join', {name, room}, (error)=>{
+            if(error){
+                alert(error);
+            }
         });
 
-        return()=>{
-            socket.emit('disconnect');
-            socket.off();
-        }
+        
 
         //console.log(socket);
 
          // get new values onchange
-      }, [searchParams]); 
+      }, [ENDPOINT, searchParams]); 
 
       useEffect(()=>{
           socket.on('message', message=>{
                setMessages(messages=>[...messages, message]);
           })
-      }, [messages])
+          
+          socket.on("roomData", ({users})=>{
+              setUsers(users);
+          })
+
+      }, [])
     
     //function to send message on pressing Enter
 

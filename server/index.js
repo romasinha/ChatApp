@@ -11,7 +11,9 @@ const router = require('./router')
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server, {
+    cors: {origin: "*"}
+});
 
 app.use(cors());
 app.use(router);
@@ -25,7 +27,7 @@ io.on('connect', (socket)=>{
         socket.join(user.room);
 
         socket.emit('message', {user: 'admin', text: `${user.name}, Welcome to ${user.room}`})
-        socket.broadcast.to(user.room).emit('message', {user:'admin', text:`${user.name} has joined the!`})
+        socket.broadcast.to(user.room).emit('message', {user:'admin', text:`${user.name} has joined the room!`})
 
         
         
