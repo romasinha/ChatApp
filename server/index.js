@@ -22,10 +22,15 @@ io.on('connect', (socket)=>{
 
         if(error) return callback(error);
 
+        socket.join(user.room);
+
         socket.emit('message', {user: 'admin', text: `${user.name}, Welcome to ${user.room}`})
         socket.broadcast.to(user.room).emit('message', {user:'admin', text:`${user.name} has joined the!`})
 
-        socket.join(user.room);
+        
+        
+        io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)})
+
         callback();
     })
 
@@ -33,12 +38,17 @@ io.on('connect', (socket)=>{
        const user = getUser(socket.id);
 
        io.to(user.room).emit('message', {user: user.name, text: message});
+       io.to(user.room).emit('roomData', {user: user.room, users: getUsersInRoom(user.room)});
 
        callback();
     })
 
     socket.on('disconnect', ()=>{
-        console.log("user has left");
+         const user = removeUser(socket.id);
+
+         if(user){
+             io.to(user.room).emit('message', {user:'admin', text: `${user.name} left the chat`})
+         }
     })
 })
 
